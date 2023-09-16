@@ -30,6 +30,9 @@
 ## 4. 
 Схема БД
 ![image](https://github.com/pashtet1092/DataBase/assets/93840829/383b001a-fa81-491e-8d4f-38191302b3e6)
+
+![image](https://github.com/pashtet1092/DataBase/assets/93840829/3fd9086e-04c5-441b-901f-5bc75fa051bf)
+
 ## 5. 
 1)Пользователь (Users):
 
