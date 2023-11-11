@@ -42,7 +42,7 @@ EXECUTE PROCEDURE log_new_forum();
 
 ### 3. **Триггер для автоматического обновления статуса футбольного клуба при добавлении новости:**
 
-   Этот триггер изменяет статус футбольного клуба на "Активен" при добавлении новости о клубе.
+   Этот триггер изменяет статус футбольного клуба на "Популярен" при добавлении новости о клубе.
 
    ```sql
    CREATE OR REPLACE FUNCTION update_club_status()
@@ -87,7 +87,7 @@ EXECUTE PROCEDURE update_club_wins();
 
 ### 5. **Триггер для автоматического уменьшения количества доступных билетов при покупке:**
 
-   Этот триггер уменьшает количество доступных билетов при создании нового матча.
+   Этот триггер уменьшает количество доступных билетов при покупке билетов на матч.
 
    ```sql
    CREATE OR REPLACE FUNCTION reduce_available_tickets()
@@ -139,82 +139,139 @@ EXECUTE PROCEDURE add_to_fan_club();
 
 # 2.Процедуры:
 
-### 1. **Процедура для создания нового пользователя:**
-
-   Создайте процедуру, которая позволяет администратору или модератору создать нового пользователя, указав имя пользователя, адрес электронной почты и пароль.
+### 1. **Добавление нового пользователя:**
 
    ```sql
-   CREATE OR REPLACE PROCEDURE create_new_user(
-       username character varying,
-       email character varying,
-       password character varying
-   ) AS $$
-   BEGIN
-       INSERT INTO public."users" (username, email, password)
-       VALUES (username, email, password);
-   END;
-   $$ LANGUAGE plpgsql;
+   CREATE OR REPLACE FUNCTION create_new_user(
+    p_username VARCHAR(30),
+    p_email VARCHAR,
+    p_password VARCHAR,
+    p_role VARCHAR(20)
+)
+RETURNS VOID
+AS $$
+BEGIN
+    INSERT INTO db_university.users (username, email, password, role)
+    VALUES (p_username, p_email, p_password, p_role);
+END;
+$$ LANGUAGE plpgsql;
+
+   ```
+   Вызов процедуры:
+```sql
+SELECT create_new_user('НовыйПользователь', 'новыйпользователь@example.com', 'пароль123', 'обычный_пользователь');
    ```
 
-### 2. **Процедура для добавления нового поста:**
 
-   Создайте процедуру, которая позволяет пользователям добавить новый пост с указанием заголовка и описания.
+### 2. **Добавление новости:**
 
    ```sql
-   CREATE OR REPLACE PROCEDURE create_new_post(
-       user_id bigint,
-       title character varying,
-       description character varying
-   ) AS $$
-   BEGIN
-       INSERT INTO public."posts" (title, description, user_id)
-       VALUES (title, description, user_id);
-   END;
-   $$ LANGUAGE plpgsql;
+   CREATE OR REPLACE FUNCTION add_news(
+    IN p_title VARCHAR(50),
+    IN p_news_text TEXT,
+    IN p_publication_date DATE,
+    IN p_user_id INTEGER,
+    IN p_football_club_id INTEGER
+)
+RETURNS VOID
+AS $$
+BEGIN
+    INSERT INTO db_university.news (title, news_text, publication_date, user_id, football_club_id)
+    VALUES (p_title, p_news_text, p_publication_date, p_user_id, p_football_club_id);
+END;
+$$ LANGUAGE plpgsql;
+
    ```
 
-### 3. **Процедура для получения списка задач для конкретного пользователя:**
+Вызов процедуры:
+```sql
+SELECT add_news('Новость 1', 'Текст новости', '2023-01-01', 1, 1);
+   ```
 
-   Создайте процедуру, которая принимает идентификатор пользователя и возвращает список его задач.
+### 3. **Процедура для добавления нового тренера:**
 
    ```sql
-   CREATE OR REPLACE PROCEDURE get_user_tasks(user_id bigint) AS $$
-   BEGIN
-       SELECT * FROM public."tasks" WHERE user_id = user_id;
-   END;
-   $$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION add_coach(
+    IN p_coach_name VARCHAR(50),
+    IN p_biography VARCHAR,
+    IN p_achievements VARCHAR,
+    IN p_football_club_id INTEGER
+)
+RETURNS VOID
+AS $$
+BEGIN
+    INSERT INTO db_university.coaches (coach_name, biography, achievements, football_club_id)
+    VALUES (p_coach_name, p_biography, p_achievements, p_football_club_id);
+END;
+$$ LANGUAGE plpgsql;
+
+   ```
+Вызов процедуры:
+```sql
+SELECT add_coach('Новый тренер', 'Биография тренера', 'Достижения тренера', 1);
    ```
 
-### 4. **Процедура для добавления нового отзыва:**
-
-   Создайте процедуру, которая позволяет пользователям добавлять новые отзывы с указанием текста и даты.
+### 4. **Процедура для обновления информации о матче:**
 
    ```sql
-   CREATE OR REPLACE PROCEDURE create_new_review(
-       user_id bigint,
-       description character varying,
-       create_time date
-   ) AS $$
-   BEGIN
-       INSERT INTO public."reviews" (description, create_time, user_id)
-       VALUES (description, create_time, user_id);
-   END;
-   $$ LANGUAGE plpgsql;
+  CREATE OR REPLACE FUNCTION update_match_info(
+    IN p_match_id BIGINT,
+    IN p_final_score VARCHAR(10),
+    IN p_description VARCHAR
+)
+RETURNS VOID
+AS $$
+BEGIN
+    UPDATE db_university.match_results
+    SET final_score = p_final_score, description = p_description
+    WHERE id = p_match_id;
+END;
+$$ LANGUAGE plpgsql;
+   ```
+Вызов процедуры:
+```sql
+SELECT update_match_info(1, '2-1', 'Захватывающий матч!');
    ```
 
-### 5. **Процедура для обновления статуса задачи:**
+### 5. **Обновление информации о футбольном клубе:**
 
-   Создайте процедуру, которая позволяет пользователю обновить статус задачи по ее идентификатору.
 
    ```sql
-   CREATE OR REPLACE PROCEDURE update_task_status(
-       task_id bigint,
-       new_status integer
-   ) AS $$
-   BEGIN
-       UPDATE public."tasks"
-       SET "check" = (new_status = 1)
-       WHERE id = task_id;
-   END;
-   $$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION update_football_club_info(
+    IN p_club_id INTEGER,
+    IN p_new_achievements VARCHAR
+)
+RETURNS VOID
+AS $$
+BEGIN
+    UPDATE db_university.football_club
+    SET achievements = p_new_achievements
+    WHERE id = p_club_id;
+END;
+$$ LANGUAGE plpgsql;
+
    ```
+Вызов процедуры:
+```sql
+SELECT update_football_club_info(1, 'Новые достижения клуба');
+   ```
+
+### 6. **Удаление новости по её идентификатору:**
+
+
+   ```sql
+   CREATE OR REPLACE FUNCTION delete_news_by_id(p_news_id INTEGER)
+RETURNS VOID
+AS $$
+BEGIN
+    DELETE FROM db_university.news
+    WHERE id = p_news_id;
+END;
+$$ LANGUAGE plpgsql;
+
+   ```
+Вызов процедуры:
+```sql
+SELECT delete_news_by_id(1);
+   ```
+
