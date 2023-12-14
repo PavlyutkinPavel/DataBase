@@ -1,0 +1,5 @@
+package com.db_lab.db_lab6.domain;
+
+public enum Role {
+    ADMIN,USER
+}
