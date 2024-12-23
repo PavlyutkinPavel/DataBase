@@ -1,6 +1,7 @@
 package com.db_lab.db_lab6.controller;
 
 import com.db_lab.db_lab6.domain.FootballClub;
+import com.db_lab.db_lab6.domain.dto.FootballClubDTO;
 import com.db_lab.db_lab6.exception.FootballClubNotFoundException;
 import com.db_lab.db_lab6.security.service.SecurityService;
 import com.db_lab.db_lab6.service.FootballClubService;
@@ -44,7 +45,7 @@ public class FootballClubController {
         }
     }
 
-    @Operation(summary = "get FootballClub (for authorized users)")
+    @Operation(summary = "get FootballClub (for all)")
     @GetMapping("/{id}")
     public ResponseEntity<FootballClub> getFootballClub(@PathVariable Long id) {
         FootballClub footballClub = footballClubService.getFootballClub(id);
@@ -55,18 +56,27 @@ public class FootballClubController {
         }
     }
 
-    //maybe should be deleted(or only for admins)
-    @Operation(summary = "create FootballClub (for authorized users)")
+    @Operation(summary = "create FootballClub (for admins)")
     @PostMapping
-    public ResponseEntity<HttpStatus> createUser(@RequestBody FootballClub footballClub) {
-        footballClubService.createFootballClub(footballClub);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+    public ResponseEntity<HttpStatus> createFootballClub(@RequestBody FootballClubDTO footballClubDTO, Principal principal) {
+        if(principal == null){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        if (securityService.checkIfAdmin(principal.getName())) {
+            footballClubService.createFootballClub(footballClubDTO);
+            return new ResponseEntity<>(HttpStatus.CREATED);
+        } else {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
     }
 
 
     @Operation(summary = "update FootballClub (for authorized users)")
     @PutMapping
     public ResponseEntity<HttpStatus> updateFootballClub(@RequestBody FootballClub footballClub, Principal principal) {
+        if(principal == null){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
         if (securityService.checkIfAdmin(principal.getName())) {
             footballClubService.updateFootballClub(footballClub);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -78,6 +88,9 @@ public class FootballClubController {
     @Operation(summary = "delete FootballClub (for authorized users)")
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> deleteFootballClub(@PathVariable Long id, Principal principal) {
+        if(principal == null){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
         if (securityService.checkIfAdmin(principal.getName())) {
             footballClubService.deleteFootballClubById(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);

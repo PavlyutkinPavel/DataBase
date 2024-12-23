@@ -36,6 +36,9 @@ public class UserController {
     @Operation(summary = "get all users(for admins)")
     @GetMapping
     public ResponseEntity<List<User>> getUsers(Principal principal) {
+        if(principal == null){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
         if (securityService.checkIfAdmin(principal.getName())) {
             List<User> users = userService.getUsers(principal);
             if (users.isEmpty()) {
@@ -50,14 +53,20 @@ public class UserController {
 
     @Operation(summary = "get user by last name(for all users)")
     @GetMapping("/last")
-    public ResponseEntity<User> getUserByLastName(@RequestParam String lastName) {
+    public ResponseEntity<User> getUserByLastName(@RequestParam String lastName, Principal principal) {
+        if(principal == null){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
         User user = userService.findUserByLastName(lastName).orElseThrow(UserNotFoundException::new);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
     @Operation(summary = "get user by first name(for all users)")
     @GetMapping("/first")
-    public ResponseEntity<User> getUserByFirstName(@RequestParam String firstName) {
+    public ResponseEntity<User> getUserByFirstName(@RequestParam String firstName, Principal principal) {
+        if(principal == null){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
         User user = userService.findUserByFirstName(firstName).orElseThrow(UserNotFoundException::new);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
@@ -65,6 +74,9 @@ public class UserController {
     @Operation(summary = "get user (for authorized users)")
     @GetMapping("/{id}")
     public ResponseEntity<User> getUser(@PathVariable Long id, Principal principal) {
+        if(principal == null){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
         User user = userService.getUser(id, principal);
         if (user != null) {
             return new ResponseEntity<>(user, HttpStatus.OK);
@@ -73,18 +85,21 @@ public class UserController {
         }
     }
 
-    //maybe should be deleted(or only for admins)
-    @Operation(summary = "create user (for authorized users)")
-    @PostMapping
-    public ResponseEntity<HttpStatus> createUser(@RequestBody User user) {
-        userService.createUser(user);
-        return new ResponseEntity<>(HttpStatus.CREATED);
-    }
+//    //maybe should be deleted(or only for admins)
+//    @Operation(summary = "create user (for authorized users)")
+//    @PostMapping
+//    public ResponseEntity<HttpStatus> createUser(@RequestBody User user) {
+//        userService.createUser(user);
+//        return new ResponseEntity<>(HttpStatus.CREATED);
+//    }
 
 
     @Operation(summary = "update user (for authorized users)")
     @PutMapping
     public ResponseEntity<HttpStatus> updateUser(@RequestBody User user, Principal principal) {
+        if(principal == null){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
         if (securityService.checkIfAdmin(principal.getName()) || (securityService.getUserIdByLogin(principal.getName()) == user.getId())) {
             userService.updateUser(user);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -96,6 +111,9 @@ public class UserController {
     @Operation(summary = "delete user (for authorized users)")
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> deleteUser(@PathVariable Long id, Principal principal) {
+        if(principal == null){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
         if (securityService.checkIfAdmin(principal.getName()) || (securityService.getUserIdByLogin(principal.getName()) == id)) {
             userService.deleteUserById(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);

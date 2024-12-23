@@ -29,10 +29,10 @@ public class MatchSchedule {
     private Long id;
 
     @Column(name = "match_date")
-    private LocalDateTime match_date;
+    private LocalDateTime matchDate;
 
     @Column(name = "match_location")
-    private String match_location;
+    private String matchLocation;
 
     @Column(name = "home_team_id")
     private Long homeTeam;
@@ -41,7 +41,7 @@ public class MatchSchedule {
     private Long awayTeam;
 
     @Column(name = "available_tickets")
-    private Long available_tickets;
+    private Long availableTickets;
 
 
 }

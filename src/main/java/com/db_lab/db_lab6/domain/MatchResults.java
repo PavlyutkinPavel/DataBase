@@ -29,7 +29,7 @@ public class MatchResults {
     private Long id;
 
     @Column(name = "final_score")
-    private String final_score;
+    private String finalScore;
 
     @Column(name = "description")
     private String description;

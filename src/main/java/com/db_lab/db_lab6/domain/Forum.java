@@ -21,8 +21,7 @@ public class Forum {
     private String title;
 
     @Column(name = "description")
-
-    private String content;
+    private String description;
 
     @Column(name = "forum_members")
     private Long members;

@@ -23,9 +23,6 @@ public class FootballClub {
     @Column(name = "club_name")
     private String clubName;
 
-    @Column(name = "club_logo")
-    private String club_logo;
-
     @Column(name = "location")
     private String location;
 

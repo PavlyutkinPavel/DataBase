@@ -16,10 +16,16 @@ var colors = [
     '#ffc107', '#ff85af', '#FF9800', '#39bbb0'
 ];
 
+// Переменная для контроля состояния авторизации
+var isAuthenticated = false;
+
+// Функция для подключения к чату
 function connect(event) {
+    event.preventDefault();
     username = document.querySelector('#name').value.trim();
 
-    if(username) {
+    if (username) {
+        isAuthenticated = true; // Пользователь авторизован
         usernamePage.classList.add('hidden');
         chatPage.classList.remove('hidden');
 
@@ -27,57 +33,53 @@ function connect(event) {
         stompClient = Stomp.over(socket);
 
         stompClient.connect({}, onConnected, onError);
+    } else {
+        alert("Enter username!");
     }
-    event.preventDefault();
 }
 
-
 function onConnected() {
-    // Subscribe to the Public Topic
     stompClient.subscribe('/topic/public', onMessageReceived);
-
-    // Tell your username to the server
-    stompClient.send("/app/chat.addUser",
+    stompClient.send(
+        "/app/chat.addUser",
         {},
-        JSON.stringify({sender: username, type: 'JOIN'})
-    )
-
+        JSON.stringify({ sender: username, type: 'JOIN' })
+    );
     connectingElement.classList.add('hidden');
 }
 
-
 function onError(error) {
-    connectingElement.textContent = 'Could not connect to WebSocket server. Please refresh this page to try again!';
+    connectingElement.textContent = 'Error connecting to WebSocket server. Try update webpage.';
     connectingElement.style.color = 'red';
 }
 
-
 function sendMessage(event) {
+    event.preventDefault();
     var messageContent = messageInput.value.trim();
-    if(messageContent && stompClient) {
+
+    if (messageContent && stompClient) {
         var chatMessage = {
             sender: username,
-            content: messageInput.value,
+            content: messageContent,
             type: 'CHAT'
         };
+
         stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
         messageInput.value = '';
     }
-    event.preventDefault();
 }
-
 
 function onMessageReceived(payload) {
     var message = JSON.parse(payload.body);
 
     var messageElement = document.createElement('li');
 
-    if(message.type === 'JOIN') {
+    if (message.type === 'JOIN') {
         messageElement.classList.add('event-message');
         message.content = message.sender + ' joined!';
     } else if (message.type === 'LEAVE') {
         messageElement.classList.add('event-message');
-        message.content = message.sender + ' left!';
+        message.content = message.sender + ' left chat!';
     } else {
         messageElement.classList.add('chat-message');
 
@@ -104,7 +106,6 @@ function onMessageReceived(payload) {
     messageArea.scrollTop = messageArea.scrollHeight;
 }
 
-
 function getAvatarColor(messageSender) {
     var hash = 0;
     for (var i = 0; i < messageSender.length; i++) {
@@ -114,43 +115,36 @@ function getAvatarColor(messageSender) {
     return colors[index];
 }
 
-function register(event) {
-    event.preventDefault();
+// Функция для отображения страниц
+function showPage(pageId) {
+    const allPages = document.querySelectorAll('#content-area > div');
+    allPages.forEach(page => page.classList.add('hidden'));
 
-    var registrationForm = document.querySelector('#registrationForm');
-    var formData = new FormData(registrationForm);
-
-    var registrationData = {};
-    formData.forEach(function(value, key) {
-        registrationData[key] = value;
-    });
-
-    // Отправьте данные регистрации на сервер
-    fetch('/your-registration-endpoint', {
-        method: 'POST',
-        body: JSON.stringify(registrationData),
-        headers: {
-            'Content-Type': 'application/json'
+    const selectedPage = document.getElementById(`${pageId}-page`);
+    if (selectedPage) {
+        // Убедиться, что при переходе к чату пользователь авторизован
+        if (pageId === 'chat' && !isAuthenticated) {
+            usernamePage.classList.remove('hidden');
+        } else {
+            selectedPage.classList.remove('hidden');
         }
-    })
-        .then(function(response) {
-            if (response.ok) {
-                // Успешная регистрация, выполняйте необходимые действия
-                // Например, переключение на страницу чата
-                usernamePage.classList.add('hidden');
-                chatPage.classList.remove('hidden');
-            } else {
-                // Обработка ошибки регистрации, вы можете показать сообщение об ошибке пользователю
-                console.error('Registration failed');
-            }
-        })
-        .catch(function(error) {
-            console.error('Error:', error);
-        });
+    } else {
+        console.error(`Page with id "${pageId}-page" not found.`);
+    }
 }
 
-document.querySelector('#registrationForm').addEventListener('submit', register);
+// Привязка событий к навигации
+document.querySelectorAll('[data-page]').forEach(link => {
+    link.addEventListener('click', function (event) {
+        event.preventDefault();
+        const pageId = this.getAttribute('data-page');
+        showPage(pageId);
+    });
+});
 
+// Привязка событий для авторизации и отправки сообщений
+usernameForm.addEventListener('submit', connect, true);
+messageForm.addEventListener('submit', sendMessage, true);
 
-usernameForm.addEventListener('submit', connect, true)
-messageForm.addEventListener('submit', sendMessage, true)
+// Установка страницы по умолчанию
+showPage('main');

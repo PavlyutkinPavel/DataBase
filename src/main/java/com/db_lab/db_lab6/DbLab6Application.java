@@ -12,8 +12,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
                 description = "This is Java Spring Boot REST project for Football Forum with many features",
                 contact = @Contact(
                         name = "Pavel Pavlyutkin",
-                        email = "pashanpmrp200431@gmail.com",
-                        url = "@pashap"
+                        email = "paul@gmail.com",
+                        url = "@paul"
                 )
 
         )

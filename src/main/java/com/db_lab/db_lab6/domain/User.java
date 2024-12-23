@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -18,7 +19,6 @@ import java.time.LocalDateTime;
 @Component
 @Schema(description = "Описание пользователя")
 @Data
-//@Table(schema = "db_university", name = "users")
 @Entity(name = "users")
 public class User {
 
@@ -29,15 +29,18 @@ public class User {
     private Long id;
 
     @Column(name = "first_name")
+    @NotNull
     private String firstName;
 
     @Column(name = "last_name")
+    @NotNull
     private String lastName;
 
     @Column(name = "created")
     private LocalDateTime createdAt;
 
     @Column(name = "email")
+    @NotNull
     private String email;
 
     @Column(name = "favourite_club_id")

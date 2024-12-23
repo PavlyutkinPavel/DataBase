@@ -1,6 +1,7 @@
 package com.db_lab.db_lab6.controller;
 
 import com.db_lab.db_lab6.domain.MatchSchedule;
+import com.db_lab.db_lab6.domain.dto.MatchScheduleDTO;
 import com.db_lab.db_lab6.security.service.SecurityService;
 import com.db_lab.db_lab6.service.MatchScheduleService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,7 +33,7 @@ public class MatchScheduleController {
         this.securityService = securityService;
     }
 
-    @Operation(summary = "get all MatchSchedule(for admins)")
+    @Operation(summary = "get all MatchSchedule(for all users)")
     @GetMapping
     public ResponseEntity<List<MatchSchedule>> getMatchSchedules() {
         List<MatchSchedule> matchSchedules = matchScheduleService.getMatchSchedules();
@@ -43,7 +44,7 @@ public class MatchScheduleController {
         }
     }
 
-    @Operation(summary = "get MatchSchedule (for authorized users)")
+    @Operation(summary = "get MatchSchedule (for all users)")
     @GetMapping("/{id}")
     public ResponseEntity<MatchSchedule> getMatchSchedule(@PathVariable Long id) {
         MatchSchedule matchSchedule = matchScheduleService.getMatchSchedule(id);
@@ -54,18 +55,27 @@ public class MatchScheduleController {
         }
     }
 
-    //maybe should be deleted(or only for admins)
-    @Operation(summary = "create MatchSchedule (for authorized users)")
+    @Operation(summary = "create MatchSchedule (for admin)")
     @PostMapping
-    public ResponseEntity<HttpStatus> createMatchSchedule(@RequestBody MatchSchedule matchSchedule) {
-        matchScheduleService.createMatchSchedule(matchSchedule);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+    public ResponseEntity<HttpStatus> createMatchSchedule(@RequestBody MatchScheduleDTO matchScheduleDTO, Principal principal) {
+        if(principal == null){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        if (securityService.checkIfAdmin(principal.getName())) {
+            matchScheduleService.createMatchSchedule(matchScheduleDTO);
+            return new ResponseEntity<>(HttpStatus.CREATED);
+        }else {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
     }
 
 
-    @Operation(summary = "update MatchSchedule (for authorized users)")
+    @Operation(summary = "update MatchSchedule (for admin)")
     @PutMapping
     public ResponseEntity<HttpStatus> updateMatchSchedule(@RequestBody MatchSchedule matchSchedule, Principal principal) {
+        if(principal == null){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
         if (securityService.checkIfAdmin(principal.getName())) {
             matchScheduleService.updateMatchSchedule(matchSchedule);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -74,9 +84,12 @@ public class MatchScheduleController {
         }
     }
 
-    @Operation(summary = "delete MatchSchedule (for authorized users)")
+    @Operation(summary = "delete MatchSchedule (for admin)")
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> deleteMatchSchedule(@PathVariable Long id, Principal principal) {
+        if(principal == null){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
         if (securityService.checkIfAdmin(principal.getName())) {
             matchScheduleService.deleteMatchScheduleById(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
